@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 
 <html lang="en-US">
 <head>
@@ -223,39 +222,40 @@
 		</div>
 	</div>
 
-	<pre id="example-target"><code>$('.dial li').waypoint( function(direction) {
-  var $active = $(this);
+	<pre id="example-target"><code>jQuery('.dial li').waypoint( function(direction) {
+  var jQueryactive = jQuery(this);
   var property, value;
 
   /* The waypoint is triggered at the top of each list item representing a dial section. When triggering in the down direction we want to use the dial section the waypoint is attached to. But in the up direction we want to use the previous dial section. */
   if (direction === "up") {
-    $active = $active.prev();
+    jQueryactive = jQueryactive.prev();
   }
 
   /* If we triggered in the up direction and the result from 'prev' came back with an empty set of elements, it means we were on the first element in the list, and we should just use the original element. */
-  if (!$active.length) {
-    $active = $(this);
+  if (!jQueryactive.length) {
+    jQueryactive = jQuery(this);
   }
 
   /* The property the dial controls is a data attribute on the ul. */
-  property = $active.closest('.dial').data('property');
+  property = jQueryactive.closest('.dial').data('property');
 
   /* The value for that property is a data attribute on each li. */
-  value = $active.data('value');
+  value = jQueryactive.data('value');
 	
-  $('#example-target').css(property, value);
+  jQuery('#example-target').css(property, value);
 }, {
   context: 'ul' // Make the scroll context the nearest ul.
 });</code></pre>
 </div>
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
-<script src="../../waypoints.js"></script>
+<script src="../../prototype.js"></script>
+<script src="../../prototype_waypoints.js"></script>
 
 <script type="text/javascript">
-$(function() {
-	$('.dial li').waypoint(function(direction) {
-		var $active = $(this);
+jQuery(function() {
+	jQuery('.dial li').waypoint(function(direction) {
+		var jQueryactive = jQuery(this);
 		var property, value;
 
 		/* The waypoint is triggered at the top of each list item representing
@@ -263,28 +263,28 @@ $(function() {
 		   the dial section the waypoint is attached to. But in the up direction
 		   we want to use the previous dial section. */
 		if (direction === "up") {
-			$active = $active.prev();
+			jQueryactive = jQueryactive.prev();
 		}
 
 		/* If we triggered in the up direction and the result from 'prev' came
 		   back with an empty set of elements, it means we were on the first
 		   element in the list, and we should just use the original element. */
-		if (!$active.length) {
-			$active = $(this);
+		if (!jQueryactive.length) {
+			jQueryactive = jQuery(this);
 		}
 
 		/* The property the dial controls is a data attribute on the ul. */
-		property = $active.closest('.dial').data('property');
+		property = jQueryactive.closest('.dial').data('property');
 
 		/* The value for that property is a data attribute on each li. */
-		value = $active.data('value');
+		value = jQueryactive.data('value');
 		
-		$('#example-target').css(property, value);
+		jQuery('#example-target').css(property, value);
 	}, {
 		context: 'ul' // Make the scroll context the nearest ul.
 	});
 
-	$('.dial ul').animate({ scrollTop: 145}, 750, 'swing');
+	jQuery('.dial ul').animate({ scrollTop: 145}, 750, 'swing');
 });
 </script>
 

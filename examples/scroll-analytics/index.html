@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 
 <html lang="en-US">
 <head>
@@ -222,44 +222,45 @@
 </div>
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
-<script src="../../waypoints.js"></script>
+<script src="../../prototype.js"></script>
+<script src="../../prototype_waypoints.js"></script>
 
 <script type="text/javascript">
-$(document).ready(function() {
-	$('body').append($("<div class='popup hiding' id='article-finished'>You have finished reading the article.  Instead of this popup we could track a custom analytics event or show links to related articles the user may be interested in reading. (<a href='http://www.nytimes.com/2011/02/16/technology/16dell.html?ref=technology' target='_blank'>New York Times Online articles</a> do this.)</div>"));
+jQuery(document).ready(function() {
+	jQuery('body').append(jQuery("<div class='popup hiding' id='article-finished'>You have finished reading the article.  Instead of this popup we could track a custom analytics event or show links to related articles the user may be interested in reading. (<a href='http://www.nytimes.com/2011/02/16/technology/16dell.html?ref=technology' target='_blank'>New York Times Online articles</a> do this.)</div>"));
 	
 	function recordAdEvent(trackid) {
-		var el = ($("div[data-analyticsid='"+trackid+"']")),
-		popup = $("<div class='popup'>This ad came into your viewport.  Instead of a popup we would track a custom analytics event with this ad&rsquo;s ID: "+trackid+".  Beats using pageviews to track ad views.</div>"),
-		close = $("<a href='#' class='close'>X</a>");
+		var el = (jQuery("div[data-analyticsid='"+trackid+"']")),
+		popup = jQuery("<div class='popup'>This ad came into your viewport.  Instead of a popup we would track a custom analytics event with this ad&rsquo;s ID: "+trackid+".  Beats using pageviews to track ad views.</div>"),
+		close = jQuery("<a href='#' class='close'>X</a>");
 		
 		el.addClass('active');
 		popup.append(close);
-		$('body').append(popup);
+		jQuery('body').append(popup);
 		popup.css('width', el.outerWidth() - 10);
 		popup.css({
 			'top': el.offset().top - popup.outerHeight(),
 			'left': el.offset().left
 		});
 		close.click(function(event) {
-			$(this).parent().remove();
+			jQuery(this).parent().remove();
 			el.removeClass('active');
 			event.preventDefault();
 		});
 	}
 	
-	$('.ad-unit').waypoint(function() {
-		recordAdEvent($(this).data('analyticsid'));
+	jQuery('.ad-unit').waypoint(function() {
+		recordAdEvent(jQuery(this).data('analyticsid'));
 	}, {
 		triggerOnce: true,
 		offset: 'bottom-in-view'
 	});
-	
-	$('#lcol').waypoint(function(direction) {
-		$('#article-finished').toggleClass('hiding', direction === "up");
+
+	jQuery('#lcol').waypoint(function(direction) {
+		jQuery('#article-finished').toggleClass('hiding', direction === "up");
 	}, {
 		offset: function() {
-			return $.waypoints('viewportHeight') - $(this).height() + 100;
+			return jQuery.waypoints('viewportHeight') - jQuery(this).height() + 100;
 		}
 	});
 });
