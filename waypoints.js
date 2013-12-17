@@ -166,7 +166,6 @@ https://github.com/imakewebthings/jquery-waypoints/blob/master/licenses.txt
         return $.each(axes, function(aKey, axis) {
           return $.each(_this.waypoints[aKey], function(i, waypoint) {
             var adjustment, elementOffset, oldOffset, _ref, _ref1;
-
             adjustment = waypoint.options.offset;
             oldOffset = waypoint.offset;
             elementOffset = $.isWindow(waypoint.element) ? 0 : waypoint.$element.offset()[axis.offsetProp];
@@ -219,6 +218,7 @@ https://github.com/imakewebthings/jquery-waypoints/blob/master/licenses.txt
             return contextHeight - $(this).outerHeight();
           };
         }
+        
         this.$element = $element;
         this.element = $element[0];
         this.axis = options.horizontal ? 'horizontal' : 'vertical';
@@ -288,15 +288,19 @@ https://github.com/imakewebthings/jquery-waypoints/blob/master/licenses.txt
         if ((_ref = options.handler) == null) {
           options.handler = f;
         }
+                
         this.each(function() {
           var $this, context, contextElement, _ref1;
 
           $this = $(this);
           contextElement = (_ref1 = options.context) != null ? _ref1 : $.fn[wp].defaults.context;
           if (!$.isWindow(contextElement)) {
+              
             contextElement = $this.closest(contextElement);
           }
+          
           contextElement = $(contextElement);
+          console.log(contextElement);
           context = contexts[contextElement.data(contextKey)];
           if (!context) {
             context = new Context(contextElement);
