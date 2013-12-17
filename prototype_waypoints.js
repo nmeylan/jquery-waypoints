@@ -6,7 +6,7 @@
  https://github.com/imakewebthings/jquery-waypoints/blob/master/licenses.txt
  */
 
-
+var PrototypeWaypoint;
 (function() {
     var __indexOf = [].indexOf || function(item) {
         for (var i = 0, l = this.length; i < l; i++) {
@@ -15,7 +15,7 @@
         }
         return -1;
     },
-            __slice = [].slice, PrototypeWaypoint;
+            __slice = [].slice;
 
     (function(root, factory) {
         if (typeof define === 'function' && define.amd) {
@@ -64,7 +64,6 @@
                 this.window_element.data = $H();
                 this.window_element.data[contextKey] = this.id;
                 contexts[this.id] = this;
-                console.log(self.window_element);
                 Event.observe(self.element, scrollEvent, function() {
                     var scrollHandler;
 
@@ -85,7 +84,7 @@
                             PrototypeWaypoint.waypoints('refresh');
                             return self.didResize = false;
                         };
-                        
+
                         return window.setTimeout(resizeHandler, PrototypeWaypoint.waypoints_settings.resizeThrottle);
                     }
                 });
@@ -210,8 +209,8 @@
             };
 
             Context.prototype.checkEmpty = function() {
-                if ($.isEmptyObject(this.waypoints.horizontal) && $.isEmptyObject(this.waypoints.vertical)) {
-                    Event.stopObserving(element, [resizeEvent, scrollEvent].join(' '));
+                if (jQMethods.isEmptyObject(this.waypoints.horizontal) && jQMethods.isEmptyObject(this.waypoints.vertical)) {
+                    Event.stopObserving(this.element, [resizeEvent, scrollEvent].join(' '));
                     return delete contexts[this.id];
                 }
             };
@@ -225,7 +224,6 @@
                 //TODO Correct here
                 options = $H(Element.waypoint_defaults).merge(options);
                 options = options.toObject();
-                console.log();
                 if (options.offset === 'bottom-in-view') {
                     options.offset = function() {
                         var contextHeight;
@@ -234,8 +232,6 @@
                         if (!jQMethods.isWindow(context.element)) {
                             contextHeight = context.window_element.height();
                         }
-                        console.log(element.outerHeight());
-                        console.log(element);
                         return contextHeight - element.outerHeight();
                     };
                 }
@@ -247,12 +243,12 @@
                 this.id = 'waypoints' + waypointCounter++;
                 this.offset = null;
                 this.options = options;
+                console.log(context.waypoints);
                 context.waypoints[this.axis][this.id] = this;
                 allWaypoints[this.axis][this.id] = this;
                 idList = (_ref = this.element.readAttribute('data', waypointKey)) != null ? _ref : [];
                 idList.push(this.id);
-
-
+                this.element.writeAttribute('data' + waypointKey, idList);
             }
 
             Waypoint.prototype.trigger = function(args) {
@@ -283,14 +279,16 @@
             };
 
             Waypoint.getWaypointsByElement = function(element) {
-                var all, ids;
-
-                ids = $(element).data(waypointKey);
+                var all;
+                var ids = [];
+                var data = Prototype.Selector.extendElement(element).readAttribute('data' + waypointKey);
+                ids.push(data);
                 if (!ids) {
                     return [];
                 }
-                all = $.extend({}, allWaypoints.horizontal, allWaypoints.vertical);
-                return $.map(ids, function(id) {
+                all = $H(allWaypoints.horizontal).merge(allWaypoints.vertical);
+                all = all.toObject();
+                return ids.map(function(id) {
                     return all[id];
                 });
             };
@@ -314,10 +312,13 @@
                     contextElement = self_element.getOffsetParent(contextElement);
                 }
                 contextElement = Prototype.Selector.extendElement(contextElement);
-                context = contextElement.data !== undefined ? contextElement.data[contextKey] : undefined;
+                
+                context = contextElement.data !== undefined ? contexts[contextElement.data[contextKey]] : undefined;
+                
                 if (!context) {
                     context = new Context(contextElement);
                 }
+                console.log(context);
                 return new Waypoint(self_element, context, options);
             },
             disable: function() {
@@ -363,15 +364,11 @@
                 return this.pushStack(stack);
             },
             _invoke: function(window_elements, method) {
-                window_elements.each(function() {
-                    var waypoints;
-
-                    waypoints = Waypoint.getWaypointsByElement(this);
-                    return $H(waypoints).each(function(point) {
-                        var waypoint = point.value;
-                        waypoint[method]();
-                        return true;
-                    });
+                var waypoints;
+                waypoints = Waypoint.getWaypointsByElement(window_elements);
+                return waypoints.each(function(waypoint) {
+                    waypoint[method]();
+                    return true;
                 });
                 return this;
             }
@@ -401,7 +398,7 @@
                 offset: 0,
                 triggerOnce: false
             },
-            outerHeight : function(element){
+            outerHeight: function(element) {
                 var $element = Prototype.Selector.extendElement(element);
                 var layout = $element.getLayout();
                 return layout.get('padding-box-height');
@@ -497,19 +494,22 @@
             _invoke: function(method) {
                 var waypoints;
                 //TODO correct here
-                waypoints = $.extend({}, allWaypoints.vertical, allWaypoints.horizontal);
-                return waypoints.each(function(key, waypoint) {
+                waypoints = $H(allWaypoints.horizontal).merge(allWaypoints.vertical);
+              
+                return waypoints.each(function(point) {
+                    waypoint = point.value;
                     waypoint[method]();
                     return true;
                 });
             },
             _filter: function(selector, axis, test) {
                 var context, waypoints;
-
-                context = contexts[document.querySelector(selector).readAttribute('data', contextKey)];
+                var contextElement = Prototype.Selector.extendElement(selector);
+                context = contextElement.data !== undefined ? contextElement.data[contextKey] : undefined;
                 if (!context) {
                     return [];
-                }
+                } else
+                    context = contexts[context];
                 waypoints = [];
                 $H(context.waypoints[axis]).each(function(point) {
                     var waypoint = point.value;
@@ -533,6 +533,11 @@
             isFunction: function(functionToCheck) {
                 var getType = {};
                 return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+            }, isEmptyObject: function(obj) {
+                for (var name in obj) {
+                    return false;
+                }
+                return true;
             }
         };
         PrototypeWaypoint = function() {
