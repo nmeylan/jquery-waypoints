@@ -15,7 +15,7 @@
         }
         return -1;
     },
-            __slice = [].slice;
+            __slice = [].slice, PrototypeWaypoint;
 
     (function(root, factory) {
         if (typeof define === 'function' && define.amd) {
@@ -27,8 +27,7 @@
         }
     })(this, function($, window) {
         var viewport, Context, Waypoint, allWaypoints, contextCounter, contextKey, contexts, isTouch, jQMethods, methods, resizeEvent, scrollEvent, waypointCounter, waypointKey, wp, wps;
-
-        viewport = $(window);
+        viewport = document.viewport;
 
         isTouch = __indexOf.call(window, 'ontouchstart') >= 0;
         allWaypoints = {
@@ -46,23 +45,26 @@
         wps = 'waypoints';
         Context = (function() {
             function Context(window_element) {
-                var self = this;
+
 
                 this.window_element = window_element;
-                this.element = window_element[0];
+                this.element = window_element;
                 this.didResize = false;
                 this.didScroll = false;
                 this.id = 'context' + contextCounter++;
+                var self = this;
                 this.oldScroll = {
-                    x: window_element.scrollLeft(),
-                    y: window_element.scrollTop()
+                    x: this.window_element.scrollLeft,
+                    y: this.window_element.scrollTop
                 };
                 this.waypoints = {
                     horizontal: {},
                     vertical: {}
                 };
-                window_element.data(contextKey, this.id);
+                this.window_element.data = $H();
+                this.window_element.data[contextKey] = this.id;
                 contexts[this.id] = this;
+                console.log(self.window_element);
                 Event.observe(self.element, scrollEvent, function() {
                     var scrollHandler;
 
@@ -72,7 +74,7 @@
                             self.doScroll();
                             return self.didScroll = false;
                         };
-                        return window.setTimeout(scrollHandler, $[wps].settings.scrollThrottle);
+                        return window.setTimeout(scrollHandler, PrototypeWaypoint.waypoints_settings.scrollThrottle);
                     }
                 });
                 Event.observe(self.element, resizeEvent, function() {
@@ -80,10 +82,11 @@
                     if (!self.didResize) {
                         self.didResize = true;
                         resizeHandler = function() {
-                            $[wps]('refresh');
+                            PrototypeWaypoint.waypoints('refresh');
                             return self.didResize = false;
                         };
-                        return window.setTimeout(resizeHandler, $[wps].settings.resizeThrottle);
+                        
+                        return window.setTimeout(resizeHandler, PrototypeWaypoint.waypoints_settings.resizeThrottle);
                     }
                 });
             }
@@ -106,7 +109,7 @@
                     }
                 };
                 if (isTouch && (!axes.vertical.oldScroll || !axes.vertical.newScroll)) {
-                    $[wps]('refresh');
+                    PrototypeWaypoint.waypoints('refresh');
                 }
                 $H(axes).each(function(axe) {
                     var direction, isForward, triggered;
@@ -150,13 +153,13 @@
 
 
                 isWin = jQMethods.isWindow(this.element);
-                cOffset = this.window_element.offset();
+                cOffset = this.window_element.offset;
                 this.doScroll();
                 axes = {
                     horizontal: {
                         contextOffset: isWin ? 0 : cOffset.left,
                         contextScroll: isWin ? 0 : this.oldScroll.x,
-                        contextDimension: this.window_element.width(),
+                        contextDimension: this.window_element.width,
                         oldScroll: this.oldScroll.x,
                         forward: 'right',
                         backward: 'left',
@@ -165,7 +168,7 @@
                     vertical: {
                         contextOffset: isWin ? 0 : cOffset.top,
                         contextScroll: isWin ? 0 : this.oldScroll.y,
-                        contextDimension: isWin ? $[wps]('viewportHeight') : this.window_element.height(),
+                        contextDimension: isWin ? PrototypeWaypoint.waypoints('viewportHeight') : this.window_element.height,
                         oldScroll: this.oldScroll.y,
                         forward: 'down',
                         backward: 'up',
@@ -181,8 +184,9 @@
                         var waypoint = elem.value;
                         adjustment = waypoint.options.offset;
                         oldOffset = waypoint.offset;
-                        elementOffset = jQMethods.isWindow(waypoint.element) ? 0 : waypoint.window_element.offset()[axis.offsetProp];
-                        if ($.isFunction(adjustment)) {
+                        var offset = axis.offsetProp === 'left' ? waypoint.element.offsetLeft : waypoint.element.offsetTop;
+                        elementOffset = jQMethods.isWindow(waypoint.element) ? 0 : offset;
+                        if (jQMethods.isFunction(adjustment)) {
                             adjustment = adjustment.apply(waypoint.element);
                         } else if (typeof adjustment === 'string') {
                             adjustment = parseFloat(adjustment);
@@ -216,23 +220,26 @@
 
         })();
         Waypoint = (function() {
-            function Waypoint(window_element, context, options) {
+            function Waypoint(element, context, options) {
                 var idList, _ref;
-
-                options = $.extend({}, $.fn[wp].defaults, options);
+                //TODO Correct here
+                options = $H(Element.waypoint_defaults).merge(options);
+                options = options.toObject();
+                console.log();
                 if (options.offset === 'bottom-in-view') {
                     options.offset = function() {
                         var contextHeight;
 
-                        contextHeight = $[wps]('viewportHeight');
+                        contextHeight = PrototypeWaypoint.waypoints('viewportHeight');
                         if (!jQMethods.isWindow(context.element)) {
                             contextHeight = context.window_element.height();
                         }
-                        return contextHeight - $(this).outerHeight();
+                        console.log(element.outerHeight());
+                        console.log(element);
+                        return contextHeight - element.outerHeight();
                     };
                 }
-                this.window_element = window_element;
-                this.element = window_element[0];
+                this.element = element;
                 this.axis = options.horizontal ? 'horizontal' : 'vertical';
                 this.callback = options.handler;
                 this.context = context;
@@ -244,7 +251,7 @@
                 allWaypoints[this.axis][this.id] = this;
                 idList = (_ref = this.element.readAttribute('data', waypointKey)) != null ? _ref : [];
                 idList.push(this.id);
-                window_element.data(waypointKey, idList);
+
 
             }
 
@@ -294,30 +301,24 @@
         methods = {
             init: function(f, options) {
                 var _ref;
-
                 if (options == null) {
                     options = {};
                 }
                 if ((_ref = options.handler) == null) {
                     options.handler = f;
                 }
-                this.each(function() {
-                    var $this, context, contextElement, _ref1;
-
-                    $this = $(this);
-                    contextElement = (_ref1 = options.context) != null ? _ref1 : $.fn[wp].defaults.context;
-                    if (!jQMethods.isWindow(contextElement)) {
-                        contextElement = $this.closest(contextElement);
-                    }
-                    contextElement = $(contextElement);
-                    context = contexts[contextElement.data(contextKey)];
-                    if (!context) {
-                        context = new Context(contextElement);
-                    }
-                    return new Waypoint($this, context, options);
-                });
-                $[wps]('refresh');
-                return this;
+                var self_element, context, contextElement, _ref1;
+                self_element = this;
+                contextElement = (_ref1 = options.context) != null ? _ref1 : Element.waypoint_defaults.context;
+                if (!jQMethods.isWindow(contextElement)) {
+                    contextElement = self_element.getOffsetParent(contextElement);
+                }
+                contextElement = Prototype.Selector.extendElement(contextElement);
+                context = contextElement.data !== undefined ? contextElement.data[contextKey] : undefined;
+                if (!context) {
+                    context = new Context(contextElement);
+                }
+                return new Waypoint(self_element, context, options);
             },
             disable: function() {
                 return methods._invoke(this, 'disable');
@@ -375,30 +376,38 @@
                 return this;
             }
         };
-        $.fn[wp] = function() {
-            var args, method;
-
-            method = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-            if (methods[method]) {
-                return methods[method].apply(this, args);
-            } else if (Object.isFunction(method)) {
-                return methods.init.apply(this, arguments);
-            } else if (jQMethods.isPlainObject(method)) {
-                return methods.init.apply(this, [null, method]);
-            } else if (!method) {
-                return $.error("Prototype Waypoints needs a callback function or handler option.");
-            } else {
-                return $.error("The " + method + " method does not exist in prototype Waypoints.");
+        Element.addMethods({
+            waypoint: function(element) {
+                var args;
+                var self_element = arguments[0];
+                method = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+                if (methods[method]) {
+                    return methods[method].apply(self_element, args);
+                } else if (Object.isFunction(method)) {
+                    return methods.init.apply(self_element, arguments);
+                } else if (jQMethods.isPlainObject(method)) {
+                    return methods.init.apply(self_element, [null, method]);
+                } else if (!method) {
+                    return $.error("Prototype Waypoints needs a callback function or handler option.");
+                } else {
+                    return $.error("The " + method + " method does not exist in prototype Waypoints.");
+                }
+            },
+            waypoint_defaults: {
+                context: window,
+                continuous: true,
+                enabled: true,
+                horizontal: false,
+                offset: 0,
+                triggerOnce: false
+            },
+            outerHeight : function(element){
+                var $element = Prototype.Selector.extendElement(element);
+                var layout = $element.getLayout();
+                return layout.get('padding-box-height');
             }
-        };
-        $.fn[wp].defaults = {
-            context: window,
-            continuous: true,
-            enabled: true,
-            horizontal: false,
-            offset: 0,
-            triggerOnce: false
-        };
+        });
+
         jQMethods = {
             refresh: function() {
                 return $H(contexts).each(function(context) {
@@ -520,9 +529,15 @@
             },
             isWindow: function(o) {
                 return o && typeof o === "object" && "setInterval" in o;
+            },
+            isFunction: function(functionToCheck) {
+                var getType = {};
+                return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
             }
         };
-        $[wps] = function() {
+        PrototypeWaypoint = function() {
+        }
+        Function.prototype.waypoints = function() {
             var args, method;
 
             method = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
@@ -531,13 +546,15 @@
             } else {
                 return jQMethods.aggregate.call(null, method);
             }
-        };
-        $[wps].settings = {
+        }
+        Function.prototype.waypoints_settings = {
             resizeThrottle: 100,
             scrollThrottle: 30
-        };
+        }
+
+
         return Event.observe(window, 'load', function() {
-            return $[wps]('refresh');
+            return PrototypeWaypoint.waypoints('refresh');
         });
     });
 }).call(this);
