@@ -243,12 +243,11 @@ var PrototypeWaypoint;
                 this.id = 'waypoints' + waypointCounter++;
                 this.offset = null;
                 this.options = options;
-                console.log(context.waypoints);
                 context.waypoints[this.axis][this.id] = this;
                 allWaypoints[this.axis][this.id] = this;
-                idList = (_ref = this.element.readAttribute('data', waypointKey)) != null ? _ref : [];
+                idList = (_ref = this.element.readAttribute('data-' + waypointKey)) != null ? _ref : [];
                 idList.push(this.id);
-                this.element.writeAttribute('data' + waypointKey, idList);
+                this.element.writeAttribute('data-' + waypointKey, idList);
             }
 
             Waypoint.prototype.trigger = function(args) {
@@ -312,13 +311,12 @@ var PrototypeWaypoint;
                     contextElement = self_element.getOffsetParent(contextElement);
                 }
                 contextElement = Prototype.Selector.extendElement(contextElement);
-                
+
                 context = contextElement.data !== undefined ? contexts[contextElement.data[contextKey]] : undefined;
-                
+
                 if (!context) {
                     context = new Context(contextElement);
                 }
-                console.log(context);
                 return new Waypoint(self_element, context, options);
             },
             disable: function() {
@@ -340,6 +338,7 @@ var PrototypeWaypoint;
             next: function(axis, selector) {
                 return methods._traverse.call(this, axis, selector, function(stack, index, waypoints) {
                     if (index < waypoints.length - 1) {
+                        console.log(waypoints.length);
                         return stack.push(waypoints[index + 1]);
                     }
                 });
@@ -355,13 +354,13 @@ var PrototypeWaypoint;
                 }
                 waypoints = jQMethods.aggregate(selector);
                 stack = [];
-                this.each(function() {
-                    var index;
+                var self_element = Prototype.Selector.extendElement(this);
 
-                    index = this.indexOf(waypoints[axis]) > -1;
-                    return push(stack, index, waypoints[axis]);
-                });
-                return this.pushStack(stack);
+                var index;
+                
+                index = waypoints[axis].indexOf(self_element);
+                push(stack, index, waypoints[axis]);
+                return stack;
             },
             _invoke: function(window_elements, method) {
                 var waypoints;
@@ -417,11 +416,12 @@ var PrototypeWaypoint;
                 return (_ref = window.innerHeight) != null ? _ref : viewport.getDimensions().height();
             },
             aggregate: function(contextSelector) {
-                var collection, waypoints, _ref;
-
+                var collection, waypoints;
                 collection = allWaypoints;
                 if (contextSelector) {
-                    collection = (_ref = contexts[document.querySelector(contextSelector).readAttribute('data', contextKey)]) != null ? _ref.waypoints : void 0;
+                    var contextElement = Prototype.Selector.extendElement(contextSelector);
+                    var context = contextElement.data !== undefined ? contexts[contextElement.data[contextKey]] : undefined;
+                    collection = context != null ? context.waypoints : void 0;
                 }
                 if (!collection) {
                     return [];
@@ -443,7 +443,7 @@ var PrototypeWaypoint;
                     waypoints[axis] = arr.map(function(waypoint) {
                         return waypoint.element;
                     });
-                    return waypoints[axis] = waypoints[axis].uniq;
+                    return waypoints[axis] = waypoints[axis].uniq();
                 });
                 return waypoints;
             },
@@ -495,7 +495,7 @@ var PrototypeWaypoint;
                 var waypoints;
                 //TODO correct here
                 waypoints = $H(allWaypoints.horizontal).merge(allWaypoints.vertical);
-              
+
                 return waypoints.each(function(point) {
                     waypoint = point.value;
                     waypoint[method]();
