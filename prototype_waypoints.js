@@ -96,13 +96,13 @@ var PrototypeWaypoint;
                         self = this;
                 axes = {
                     horizontal: {
-                        newScroll: this.element.scrollX,
+                        newScroll: this.element.scrollX != null ? this.element.scrollX : window.pageXOffset || jQMethods.getScrollXY()[0],
                         oldScroll: this.oldScroll.x,
                         forward: 'right',
                         backward: 'left'
                     },
                     vertical: {
-                        newScroll: this.element.scrollY,
+                        newScroll: this.element.scrollY != null ? this.element.scrollY : window.pageYOffset || jQMethods.getScrollXY()[1],
                         oldScroll: this.oldScroll.y,
                         forward: 'down',
                         backward: 'up'
@@ -111,6 +111,7 @@ var PrototypeWaypoint;
                 if (isTouch && (!axes.vertical.oldScroll || !axes.vertical.newScroll)) {
                     PrototypeWaypoint.waypoints('refresh');
                 }
+				
                 $H(axes).each(function(axe) {
                     var direction, isForward, triggered;
                     var axis = axe.value;
@@ -141,6 +142,7 @@ var PrototypeWaypoint;
                         }
                     });
                 });
+				
                 return this.oldScroll = {
                     x: axes.horizontal.newScroll,
                     y: axes.vertical.newScroll
@@ -222,19 +224,18 @@ var PrototypeWaypoint;
         Waypoint = (function() {
             function Waypoint(element, context, options) {
                 var idList, _ref;
-                //TODO Correct here
                 options = $H(Element.waypoint_defaults).merge(options);
                 options = options.toObject();
                 if (options.offset === 'bottom-in-view') {
                     options.offset = function() {
                         var contextHeight;
-
                         contextHeight = PrototypeWaypoint.waypoints('viewportHeight');
                         if (!jQMethods.isWindow(context.element)) {
                             contextHeight = context.window_element.height();
                         }
                         return contextHeight - element.outerHeight();
                     };
+					
                 }
                 this.element = element;
                 this.axis = options.horizontal ? 'horizontal' : 'vertical';
@@ -318,7 +319,9 @@ var PrototypeWaypoint;
                 if (!context) {
                     context = new Context(contextElement);
                 }
-                return new Waypoint(self_element, context, options);
+                new Waypoint(self_element, context, options);
+				PrototypeWaypoint.waypoints('refresh');
+				return this;
             },
             disable: function() {
                 return methods._invoke(this, 'disable');
@@ -384,9 +387,9 @@ var PrototypeWaypoint;
                 } else if (jQMethods.isPlainObject(method)) {
                     return methods.init.apply(self_element, [null, method]);
                 } else if (!method) {
-                    return $.error("Prototype Waypoints needs a callback function or handler option.");
+                    return new Error("Prototype Waypoints needs a callback function or handler option.");
                 } else {
-                    return $.error("The " + method + " method does not exist in prototype Waypoints.");
+                    return new Error("The " + method + " method does not exist in prototype Waypoints.");
                 }
             },
             waypoint_defaults: {
@@ -412,8 +415,7 @@ var PrototypeWaypoint;
             },
             viewportHeight: function() {
                 var _ref;
-
-                return (_ref = window.innerHeight) != null ? _ref : viewport.getDimensions().height();
+                return (_ref = window.innerHeight) != null ? _ref : document.viewport.getHeight();
             },
             aggregate: function(contextSelector) {
                 var collection, waypoints;
@@ -538,7 +540,24 @@ var PrototypeWaypoint;
                     return false;
                 }
                 return true;
-            }
+            },
+			getScrollXY: function () {
+			  var scrOfX = 0, scrOfY = 0;
+			  if( typeof( window.pageYOffset ) == 'number' ) {
+				//Netscape compliant
+				scrOfY = window.pageYOffset;
+				scrOfX = window.pageXOffset;
+			  } else if( document.body && ( document.body.scrollLeft || document.body.scrollTop ) ) {
+				//DOM compliant
+				scrOfY = document.body.scrollTop;
+				scrOfX = document.body.scrollLeft;
+			  } else if( document.documentElement && ( document.documentElement.scrollLeft || document.documentElement.scrollTop ) ) {
+				//IE6 standards compliant mode
+				scrOfY = document.documentElement.scrollTop;
+				scrOfX = document.documentElement.scrollLeft;
+			  }
+			  return [ scrOfX, scrOfY ];
+}
         };
         PrototypeWaypoint = function() {
         }
@@ -556,6 +575,8 @@ var PrototypeWaypoint;
             resizeThrottle: 100,
             scrollThrottle: 30
         }
+            
+        
 
 
         return Event.observe(window, 'load', function() {
