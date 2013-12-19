@@ -1,10 +1,10 @@
 /*
-    Initialy write with jQuery, to see the full doc : http://imakewebthings.com/jquery-waypoints
-    Rewrite with prototype 1.7 by nmeylan.
-    Nothing change except all $.waypoints functions calls. To call waypoints (with 'S') you 'll need to do like this:
-    PrototypeWaypoint.waypoints...
-    
-    To call waypoint you'll need to use $ operator from prototype.
+ Initialy write with jQuery, to see the full doc : http://imakewebthings.com/jquery-waypoints
+ Rewrite with prototype 1.7 by nmeylan.
+ Nothing change except all $.waypoints functions calls. To call waypoints (with 'S') you 'll need to do like this:
+ PrototypeWaypoint.waypoints...
+ 
+ To call waypoint you'll need to use $ operator from prototype.
  */
 
 var PrototypeWaypoint;
@@ -45,25 +45,28 @@ var PrototypeWaypoint;
         wp = 'waypoint';
         wps = 'waypoints';
         Context = (function() {
-            function Context(window_element) {
+            function Context(windowElement) {
 
-
-                this.window_element = window_element;
-                this.element = window_element;
+                this.windowElement = windowElement;
+                this.element = windowElement;
                 this.didResize = false;
                 this.didScroll = false;
                 this.id = 'context' + contextCounter++;
                 var self = this;
                 this.oldScroll = {
-                    x: this.window_element.scrollLeft,
-                    y: this.window_element.scrollTop
+                    x: this.windowElement.scrollLeft,
+                    y: this.windowElement.scrollTop
                 };
                 this.waypoints = {
                     horizontal: {},
                     vertical: {}
                 };
-                this.window_element.data = $H();
-                this.window_element.data[contextKey] = this.id;
+                if (jQMethods.isWindow(this.windowElement)) {
+                    this.windowElement.data = $H();
+                    this.windowElement.data[contextKey] = this.id;
+                } else {
+                    this.windowElement.writeAttribute('data-' + contextKey, this.id)
+                }
                 contexts[this.id] = this;
                 Event.observe(self.element, scrollEvent, function() {
                     var scrollHandler;
@@ -111,7 +114,7 @@ var PrototypeWaypoint;
                 if (isTouch && (!axes.vertical.oldScroll || !axes.vertical.newScroll)) {
                     PrototypeWaypoint.waypoints('refresh');
                 }
-				
+
                 $H(axes).each(function(axe) {
                     var direction, isForward, triggered;
                     var axis = axe.value;
@@ -142,7 +145,7 @@ var PrototypeWaypoint;
                         }
                     });
                 });
-				
+
                 return this.oldScroll = {
                     x: axes.horizontal.newScroll,
                     y: axes.vertical.newScroll
@@ -155,22 +158,22 @@ var PrototypeWaypoint;
 
 
                 isWin = jQMethods.isWindow(this.element);
-                cOffset = this.window_element.offset;
+                cOffset = this.windowElement.offset;
                 this.doScroll();
                 axes = {
                     horizontal: {
-                        contextOffset: isWin ? 0 : cOffset.left,
+                        contextOffset: isWin ? 0 : this.windowElement.offsetLeft,
                         contextScroll: isWin ? 0 : this.oldScroll.x,
-                        contextDimension: this.window_element.width,
+                        contextDimension: this.windowElement.width,
                         oldScroll: this.oldScroll.x,
                         forward: 'right',
                         backward: 'left',
                         offsetProp: 'left'
                     },
                     vertical: {
-                        contextOffset: isWin ? 0 : cOffset.top,
+                        contextOffset: isWin ? 0 : this.windowElement.offsetTop,
                         contextScroll: isWin ? 0 : this.oldScroll.y,
-                        contextDimension: isWin ? PrototypeWaypoint.waypoints('viewportHeight') : this.window_element.height,
+                        contextDimension: isWin ? PrototypeWaypoint.waypoints('viewportHeight') : this.windowElement.height,
                         oldScroll: this.oldScroll.y,
                         forward: 'down',
                         backward: 'up',
@@ -231,11 +234,11 @@ var PrototypeWaypoint;
                         var contextHeight;
                         contextHeight = PrototypeWaypoint.waypoints('viewportHeight');
                         if (!jQMethods.isWindow(context.element)) {
-                            contextHeight = context.window_element.height();
+                            contextHeight = context.window_element.getHeight();
                         }
                         return contextHeight - element.outerHeight();
                     };
-					
+
                 }
                 this.element = element;
                 this.axis = options.horizontal ? 'horizontal' : 'vertical';
@@ -247,12 +250,13 @@ var PrototypeWaypoint;
                 this.options = options;
                 context.waypoints[this.axis][this.id] = this;
                 allWaypoints[this.axis][this.id] = this;
-                idList = (_ref = this.element.readAttribute('data-' + waypointKey)) != null ? _ref : [];
-                idList.push(this.id);
+                idList = (_ref = this.element.readAttribute('data-' + waypointKey)) != null ? _ref : "";
+                idList = this.id;
                 this.element.writeAttribute('data-' + waypointKey, idList);
             }
 
             Waypoint.prototype.trigger = function(args) {
+
                 if (!this.enabled) {
                     return;
                 }
@@ -282,7 +286,7 @@ var PrototypeWaypoint;
             Waypoint.getWaypointsByElement = function(element) {
                 var all;
                 var ids = [];
-                var data = Prototype.Selector.extendElement(element).readAttribute('data' + waypointKey);
+                var data = Prototype.Selector.extendElement(element).readAttribute('data-' + waypointKey);
                 ids.push(data);
                 if (!ids) {
                     return [];
@@ -306,22 +310,27 @@ var PrototypeWaypoint;
                 if ((_ref = options.handler) == null) {
                     options.handler = f;
                 }
-                var self_element, context, contextElement, _ref1;
-                self_element = this;
+                var selfElement, context, contextElement, _ref1;
+                selfElement = this;
                 contextElement = (_ref1 = options.context) != null ? _ref1 : Element.waypoint_defaults.context;
                 if (!jQMethods.isWindow(contextElement)) {
-                    contextElement = self_element.getOffsetParent(contextElement);
+                    contextElement = selfElement.getOffsetParent(contextElement);
                 }
+                
                 contextElement = Prototype.Selector.extendElement(contextElement);
-
-                context = contextElement.data !== undefined ? contexts[contextElement.data[contextKey]] : undefined;
-
+                
+                if (jQMethods.isWindow(contextElement)) {
+                    context = contextElement.data !== undefined ? contexts[contextElement.data[contextKey]] : undefined;
+                } else {
+                    context = contexts[contextElement.readAttribute('data-' + contextKey)];
+                }
+                
                 if (!context) {
                     context = new Context(contextElement);
                 }
-                new Waypoint(self_element, context, options);
-				PrototypeWaypoint.waypoints('refresh');
-				return this;
+                new Waypoint(selfElement, context, options);
+                PrototypeWaypoint.waypoints('refresh');
+                return this;
             },
             disable: function() {
                 return methods._invoke(this, 'disable');
@@ -358,18 +367,20 @@ var PrototypeWaypoint;
                 waypoints = jQMethods.aggregate(selector);
                 stack = [];
                 var self_element = Prototype.Selector.extendElement(this);
-
                 var index;
 
                 index = waypoints[axis].indexOf(self_element);
+
                 push(stack, index, waypoints[axis]);
                 return stack;
             },
             _invoke: function(window_elements, method) {
                 var waypoints;
                 waypoints = Waypoint.getWaypointsByElement(window_elements);
+
                 return waypoints.each(function(waypoint) {
-                    waypoint[method]();
+                    if (waypoint !== undefined)
+                        waypoint[method]();
                     return true;
                 });
                 return this;
@@ -380,10 +391,20 @@ var PrototypeWaypoint;
                 var args;
                 var self_element = arguments[0];
                 method = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+
                 if (methods[method]) {
                     return methods[method].apply(self_element, args);
                 } else if (Object.isFunction(method)) {
-                    return methods.init.apply(self_element, arguments);
+                    arguments = $H(arguments);
+                    arguments.unset(0);
+                    arguments = arguments.toObject();
+                    if (arguments[2] === undefined)
+                        arguments[2] = {}
+                    arguments[2]['handler'] = method;
+                    var ary = [];
+                    ary.push(method);
+                    ary.push(arguments[2]);
+                    return methods.init.apply(self_element, ary);
                 } else if (jQMethods.isPlainObject(method)) {
                     return methods.init.apply(self_element, [null, method]);
                 } else if (!method) {
@@ -421,9 +442,15 @@ var PrototypeWaypoint;
                 var collection, waypoints;
                 collection = allWaypoints;
                 if (contextSelector) {
-                    var contextElement = Prototype.Selector.extendElement(contextSelector);
-                    var context = contextElement.data !== undefined ? contexts[contextElement.data[contextKey]] : undefined;
+                    if (jQMethods.isWindow(contextSelector)) {
+                        var contextElement = Prototype.Selector.extendElement(contextSelector);
+                        var context = contextElement.data !== undefined ? contexts[contextElement.data[contextKey]] : undefined;
+                    } else {
+                        var contextElement = $$(contextSelector);
+                        var context = contexts[contextElement[0].readAttribute('data-' + contextKey)];
+                    }
                     collection = context != null ? context.waypoints : void 0;
+
                 }
                 if (!collection) {
                     return [];
@@ -495,7 +522,6 @@ var PrototypeWaypoint;
             },
             _invoke: function(method) {
                 var waypoints;
-                //TODO correct here
                 waypoints = $H(allWaypoints.horizontal).merge(allWaypoints.vertical);
 
                 return waypoints.each(function(point) {
@@ -508,10 +534,12 @@ var PrototypeWaypoint;
                 var context, waypoints;
                 var contextElement = Prototype.Selector.extendElement(selector);
                 context = contextElement.data !== undefined ? contextElement.data[contextKey] : undefined;
+                
                 if (!context) {
                     return [];
                 } else
                     context = contexts[context];
+                
                 waypoints = [];
                 $H(context.waypoints[axis]).each(function(point) {
                     var waypoint = point.value;
@@ -535,29 +563,33 @@ var PrototypeWaypoint;
             isFunction: function(functionToCheck) {
                 var getType = {};
                 return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
-            }, isEmptyObject: function(obj) {
+            }, 
+            isEmptyObject: function(obj) {
                 for (var name in obj) {
                     return false;
                 }
                 return true;
             },
-			getScrollXY: function () {
-			  var scrOfX = 0, scrOfY = 0;
-			  if( typeof( window.pageYOffset ) == 'number' ) {
-				//Netscape compliant
-				scrOfY = window.pageYOffset;
-				scrOfX = window.pageXOffset;
-			  } else if( document.body && ( document.body.scrollLeft || document.body.scrollTop ) ) {
-				//DOM compliant
-				scrOfY = document.body.scrollTop;
-				scrOfX = document.body.scrollLeft;
-			  } else if( document.documentElement && ( document.documentElement.scrollLeft || document.documentElement.scrollTop ) ) {
-				//IE6 standards compliant mode
-				scrOfY = document.documentElement.scrollTop;
-				scrOfX = document.documentElement.scrollLeft;
-			  }
-			  return [ scrOfX, scrOfY ];
-}
+            isArray: function(array){
+                return (Object.prototype.toString.call(array) === '[object Array]');
+            },
+            getScrollXY: function() {
+                var scrOfX = 0, scrOfY = 0;
+                if (typeof (window.pageYOffset) == 'number') {
+                    //Netscape compliant
+                    scrOfY = window.pageYOffset;
+                    scrOfX = window.pageXOffset;
+                } else if (document.body && (document.body.scrollLeft || document.body.scrollTop)) {
+                    //DOM compliant
+                    scrOfY = document.body.scrollTop;
+                    scrOfX = document.body.scrollLeft;
+                } else if (document.documentElement && (document.documentElement.scrollLeft || document.documentElement.scrollTop)) {
+                    //IE6 standards compliant mode
+                    scrOfY = document.documentElement.scrollTop;
+                    scrOfX = document.documentElement.scrollLeft;
+                }
+                return [scrOfX, scrOfY];
+            }
         };
         PrototypeWaypoint = function() {
         }
@@ -575,10 +607,12 @@ var PrototypeWaypoint;
             resizeThrottle: 100,
             scrollThrottle: 30
         }
-            
-        
-
-
+        Function.prototype.isPlainObject = function(object){
+            return jQMethods.isPlainObject(object);
+        }
+        Function.prototype.isArray = function(array){
+            return jQMethods.isArray(array);
+        }
         return Event.observe(window, 'load', function() {
             return PrototypeWaypoint.waypoints('refresh');
         });

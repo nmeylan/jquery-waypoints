@@ -230,9 +230,8 @@ https://github.com/imakewebthings/jquery-waypoints/blob/master/licenses.txt
         this.options = options;
         context.waypoints[this.axis][this.id] = this;
         allWaypoints[this.axis][this.id] = this;
-        // idList = (_ref = $element.data(waypointKey)) != null ? _ref : [];
+        idList = (_ref = $element.data(waypointKey)) != null ? _ref : [];
         idList.push(this.id);
-		console.log(idList);
         $element.data(waypointKey, idList);
       }
 
@@ -282,7 +281,7 @@ https://github.com/imakewebthings/jquery-waypoints/blob/master/licenses.txt
     methods = {
       init: function(f, options) {
         var _ref;
-
+                
         if (options == null) {
           options = {};
         }
@@ -370,7 +369,6 @@ https://github.com/imakewebthings/jquery-waypoints/blob/master/licenses.txt
     };
     $.fn[wp] = function() {
       var args, method;
-
       method = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
       if (methods[method]) {
         return methods[method].apply(this, args);
@@ -404,7 +402,6 @@ https://github.com/imakewebthings/jquery-waypoints/blob/master/licenses.txt
       },
       aggregate: function(contextSelector) {
         var collection, waypoints, _ref;
-
         collection = allWaypoints;
         if (contextSelector) {
           collection = (_ref = contexts[$(contextSelector).data(contextKey)]) != null ? _ref.waypoints : void 0;
