@@ -99,13 +99,13 @@ var PrototypeWaypoint;
                         self = this;
                 axes = {
                     horizontal: {
-                        newScroll: this.element.scrollX != null ? this.element.scrollX : window.pageXOffset || jQMethods.getScrollXY()[0],
+                        newScroll: jQMethods.getScrollXY(this.element)[0],
                         oldScroll: this.oldScroll.x,
                         forward: 'right',
                         backward: 'left'
                     },
                     vertical: {
-                        newScroll: this.element.scrollY != null ? this.element.scrollY : window.pageYOffset || jQMethods.getScrollXY()[1],
+                        newScroll: jQMethods.getScrollXY(this.element)[1],
                         oldScroll: this.oldScroll.y,
                         forward: 'down',
                         backward: 'up'
@@ -573,21 +573,31 @@ var PrototypeWaypoint;
             isArray: function(array){
                 return (Object.prototype.toString.call(array) === '[object Array]');
             },
-            getScrollXY: function() {
+            getScrollXY: function(element) {
                 var scrOfX = 0, scrOfY = 0;
-                if (typeof (window.pageYOffset) == 'number') {
-                    //Netscape compliant
-                    scrOfY = window.pageYOffset;
-                    scrOfX = window.pageXOffset;
-                } else if (document.body && (document.body.scrollLeft || document.body.scrollTop)) {
-                    //DOM compliant
-                    scrOfY = document.body.scrollTop;
-                    scrOfX = document.body.scrollLeft;
-                } else if (document.documentElement && (document.documentElement.scrollLeft || document.documentElement.scrollTop)) {
-                    //IE6 standards compliant mode
-                    scrOfY = document.documentElement.scrollTop;
-                    scrOfX = document.documentElement.scrollLeft;
+                if(jQMethods.isWindow(element)){
+                    if(element.scrollX != null && element.scrollY != null){
+                        scrOfY = element.scrollY;
+                        scrOfX = element.scrollX;
+                    }
+                    else if (typeof (window.pageYOffset) == 'number') {
+                        //Netscape compliant
+                        scrOfY = window.pageYOffset;
+                        scrOfX = window.pageXOffset;
+                    } else if (document.body && (document.body.scrollLeft || document.body.scrollTop)) {
+                        //DOM compliant
+                        scrOfY = document.body.scrollTop;
+                        scrOfX = document.body.scrollLeft;
+                    } else if (document.documentElement && (document.documentElement.scrollLeft || document.documentElement.scrollTop)) {
+                        //IE6 standards compliant mode
+                        scrOfY = document.documentElement.scrollTop;
+                        scrOfX = document.documentElement.scrollLeft;
+                    }
+                }else{
+                    scrOfY = element.scrollTop;
+                    scrOfX = element.scrollLeft;
                 }
+                
                 return [scrOfX, scrOfY];
             }
         };
